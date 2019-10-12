@@ -313,7 +313,7 @@ class Ansible(object):
         self.check_result['summary']['ok'] = len(self.check_result['ok'])
         self.check_result['summary']['bad'] = len(self.check_result['bad'])
         self.check_result['summary']['critical'] = len(self.check_result['critical'])
-        self.check_result['summary']['total'] = len(self.host_data.values()) + self.check_result['summary']['error']
+        self.check_result['summary']['total'] = len(self.host_data.values())
 
         self.check_result['time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -379,5 +379,5 @@ if __name__ == '__main__':
         'mail_user': 'ops@lework.com',
         'mail_pass': '123123'
     }
-    print(json.dumps(check_result))
+	
     send_mail(mail_config, to_list, subject, html)
