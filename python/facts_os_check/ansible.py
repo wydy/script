@@ -3,6 +3,7 @@
 
 # @Time    : 2019-10-09
 # @Author  : lework
+# @Desc    : 使用ansible的facts数据生成linux资源报告
 
 
 import datetime
