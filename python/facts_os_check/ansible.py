@@ -199,6 +199,10 @@ class Ansible(object):
             self.check_result['critical'].append(host)
             if host not in self.check_result['critical_item']:
                 self.check_result['critical_item'][host] = {'critical': [], 'bad': []}
+				# 将bad项目放置到critical中显示
+                if host in self.check_result['bad']:
+                    self.check_result['critical_item'][host]['bad'].extend(self.check_result['bad_item'][host]['bad'])
+                    del self.check_result['bad_item'][host]
             self.check_result['critical_item'][host]['critical'].append(item)
 
         elif now >= self.bad_threshold:
@@ -296,9 +300,9 @@ class Ansible(object):
             self.check_usedutilization(key, 'swap', usedutilization['swap'])
 
             for du in usedutilization['disk']:
-                self.check_usedutilization(key, 'mount_size_' + mount, du['size'])
-                self.check_usedutilization(key, 'mount_block_' + mount, du['block'])
-                self.check_usedutilization(key, 'mount_inode_' + mount, du['inode'])
+                self.check_usedutilization(key, 'mount_size_' + du['mount'], du['size'])
+                self.check_usedutilization(key, 'mount_block_' + du['mount'], du['block'])
+                self.check_usedutilization(key, 'mount_inode_' + du['mount'], du['inode'])
 
             # self.check_time(key, 'time', iso8601)
             self.host_data[key]['usedutilization'] = usedutilization
