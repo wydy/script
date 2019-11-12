@@ -290,10 +290,10 @@ class HealthCheck(object):
                     if not check_state[program]['action'] or (
                             check_state[program]['failure'] != 0 and check_state[program]['failure'] % (periodSeconds * 2) == 0):
                         action_param = {
-			    'action_type': action_type,
+                            'action_type': action_type,
                             'check_result': check_result.get('msg', ''),
                             'action_exec_cmd': action_exec_cmd
-			}
+                        }
                         self.action(program, **action_param)
                         check_state[program]['action'] = True
 
