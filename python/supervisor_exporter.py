@@ -16,27 +16,41 @@
 # stdout_logfile_backups=3
 # buffer_size=10
 
-
-from xmlrpclib import ServerProxy
-from prometheus_client import Gauge, Counter, CollectorRegistry ,generate_latest, start_http_server
+import sys
 from time import sleep
+from supervisor.xmlrpc import SupervisorTransport
+from prometheus_client import Gauge, Counter, CollectorRegistry ,generate_latest, start_http_server
 
-try:
-    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-except ImportError:
-    # Python 3
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    from xmlrpc.client import Transport, ServerProxy, Fault
     from http.server import BaseHTTPRequestHandler, HTTPServer
+else:
+    from xmlrpclib import Transport, ServerProxy, Fault
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+
+
+def get_supervisord_conn(supervisord_url, supervisord_user, supervisord_pass):
+    """
+    获取supervisor的连接
+    :return:
+    """
+    transport = SupervisorTransport(supervisord_user, supervisord_pass, supervisord_url)
+    s = ServerProxy('http://127.0.0.1', transport=transport)
+    return s
 
 def is_runing(state):
     state_info = {
-            # 'STOPPED': 0,
-            'STARTING': 10,
-            'RUNNING': 20
-            # 'BACKOFF': 30,
-            # 'STOPPING': 40
-            # 'EXITED': 100,
-            # 'FATAL': 200,
-            # 'UNKNOWN': 1000
+        # 'STOPPED': 0,
+        'STARTING': 10,
+        'RUNNING': 20
+        # 'BACKOFF': 30,
+        # 'STOPPING': 40
+        # 'EXITED': 100,
+        # 'FATAL': 200,
+        # 'UNKNOWN': 1000
     }
     if state in state_info.values():
         return True
@@ -47,7 +61,7 @@ def get_metrics():
     collect_reg = CollectorRegistry(auto_describe=True)
 
     try:
-        s = ServerProxy(supervisord_url)
+        s = get_supervisord_conn(supervisord_url, supervisord_user, supervisord_pass)
         data = s.supervisor.getAllProcessInfo()
     except Exception as e:
         print("unable to call supervisord: %s" % e)
@@ -82,11 +96,11 @@ def get_metrics():
 
         if is_runing(state):
             metric_up.labels(*labels).set(1)
-	    metric_start_time_seconds.labels(*labels).inc(start)
+            metric_start_time_seconds.labels(*labels).inc(start)
         else:
             metric_up.labels(*labels).set(0)
 
-    return  collect_reg
+    return collect_reg
 
 
 class myHandler(BaseHTTPRequestHandler):
@@ -96,29 +110,32 @@ class myHandler(BaseHTTPRequestHandler):
         self.end_headers()
         data=""
         if self.path=="/":
-            data="hello, supervistor."
-	elif self.path=="/metrics":
+            data=b"hello, supervistor.\r\n\r\n/metrics"
+        elif self.path=="/metrics":
             data=generate_latest(get_metrics())
         else:
-            data="not found"
+            data=b"not found"
 	    # Send the html message
         self.wfile.write(data)
+
         return
 
 if __name__ == '__main__':
     try:
-        supervisord_url = "http://localhost:9001/RPC2"
+        supervisord_url = "unix:///var/run/supervisor.sock"
+        supervisord_user = ""
+        supervisord_pass = ""
 		
-        PORT_NUMBER = 8000
+        PORT_NUMBER = 8081
         #Create a web server and define the handler to manage the
         #incoming request
         server = HTTPServer(('', PORT_NUMBER), myHandler)
-        print 'Started httpserver on port ' , PORT_NUMBER
+        print('Started httpserver on port',PORT_NUMBER)
 	
         #Wait forever for incoming htto requests
         server.serve_forever()
 
     except KeyboardInterrupt:
-        print '^C received, shutting down the web server'
+        print('^C received, shutting down the web server')
         server.socket.close()
     
