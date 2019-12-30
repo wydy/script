@@ -274,7 +274,7 @@ class HealthCheck(object):
         elif check_type == 'cpu':
             check_method = self.cpu_check
 
-        while True:
+        while 1:
             if program not in check_state:
                 check_state[program] = {
                     'periodSeconds': 1,
@@ -299,7 +299,8 @@ class HealthCheck(object):
 
                 # 先判断成功次数
                 if check_state[program]['success'] >= successThreshold:
-                    if sendResolved and check_state[program]['failure'] > 0:
+                    # 只有开启恢复通知和检测失败并且执行操作后,才可以发送恢复通知
+                    if sendResolved and check_state[program]['action']:
                         # 只保留通知action
                         notice_action = ['email', 'wechat']
                         send_action = ','.join(list(set(action_type.split(',')) & set(notice_action)))
@@ -318,7 +319,7 @@ class HealthCheck(object):
 
                 # 再判断失败次数
                 if check_state[program]['failure'] >= failureThreshold:
-                    # 失败后, 只触发一次action，或者检测错误数可以整除2倍periodSeconds与initialDelaySeconds时触发(避免重启失败导致服务一直不可用)
+                    # 失败后, 只触发一次action, 或者检测错误数可以整除2倍periodSeconds与initialDelaySeconds时触发(避免重启失败导致服务一直不可用)
                     if not check_state[program]['action'] or (
                             check_state[program]['failure'] != 0 and check_state[program]['failure'] % (
                             (periodSeconds + initialDelaySeconds) * 2) == 0):
@@ -743,8 +744,8 @@ class HealthCheck(object):
             t.setDaemon(True)
             t.start()
 
-        while True:
-            pass
+        while 1:
+            time.sleep(0.1)
 
 
 if __name__ == '__main__':
