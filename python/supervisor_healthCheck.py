@@ -117,8 +117,8 @@ def get_proc_rss(pid, cumulative=False):
 
         procs = []
         for line in data.splitlines():
-            pid, ppid, rss = map(int, line.split())
-            procs.append(ProcInfo(pid=pid, ppid=ppid, rss=rss))
+            p_pid, p_ppid, p_rss = map(int, line.split())
+            procs.append(ProcInfo(pid=p_pid, ppid=p_ppid, rss=p_rss))
 
         # 计算rss
         try:
@@ -492,7 +492,7 @@ class HealthCheck(object):
         action_list = action_type.split(',')
 
         if 'restart' in action_list:
-            restart_result = self.action_supervistor_restart(program)
+            restart_result = self.action_supervisor_restart(program)
             msg += '\r\n Restart：%s' % restart_result
         elif 'exec' in action_list:
             exec_result = self.action_exec(program, action_exec_cmd)
@@ -503,7 +503,7 @@ class HealthCheck(object):
         if 'wechat' in action_list and self.wechat_config:
             self.action_wechat(program, action_type, msg, check_status)
 
-    def action_supervistor_restart(self, program):
+    def action_supervisor_restart(self, program):
         """
         通过supervisor的rpc接口重启进程
         :param program:
@@ -786,7 +786,7 @@ cat1:                     # supervisor中配置的program名称
   type: mem               # 检查类型: http,tcp,mem,cpu  默认: http
   maxRss: 1024            # 内存阈值, 超过则为检测失败. 单位MB, 默认: 1024
   cumulative: True        # 是否统计子进程的内存, 默认: False
-  pidGet: supervistor     # 获取pid的方式: supervistor,name,file, 选择name时,按program名称搜索pid,选择file时,需指定pidFile 默认: supervistor
+  pidGet: supervisor      # 获取pid的方式: supervisor,name,file, 选择name时,按program名称搜索pid,选择file时,需指定pidFile 默认: supervisor
   pidFile: /var/run/t.pid # 指定pid文件的路径, 只在pidGet为file的时候有用
   periodSeconds: 10       # 检查的频率(以秒为单位), 默认: 5
   initialDelaySeconds: 10 # 首次检查等待的时间(以秒为单位), 默认: 1
@@ -800,7 +800,7 @@ cat1:                     # supervisor中配置的program名称
 cat2:                     # supervisor中配置的program名称
   type: cpu               # 检查类型: http,tcp,mem,cpu 默认: http
   maxCpu: 80              # CPU阈值, 超过则为检测失败. 单位% 默认: 90%
-  pidGet: supervistor     # 获取pid的方式: supervistor,name,file, 选择name时,按program名称搜索pid,选择file时,需指定pidFile 默认: supervistor
+  pidGet: supervisor      # 获取pid的方式: supervisor,name,file, 选择name时,按program名称搜索pid,选择file时,需指定pidFile 默认: supervisor
   pidFile: /var/run/t.pid # 指定pid文件的路径, 只在pidGet为file的时候有用
   periodSeconds: 10       # 检查的频率(以秒为单位), 默认: 5
   initialDelaySeconds: 10 # 首次检查等待的时间(以秒为单位), 默认: 1
