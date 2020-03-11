@@ -98,7 +98,7 @@ download_package_centos() {
   $docker_exec yum makecache
   
   echo_title "\n[Docker] download package"
-  $docker_exec yum install -y --downloadonly --downloaddir=${package_tmp_path} ${package_name}
+  $docker_exec yum install -y --downloadonly --downloaddir=${package_tmp_path} ${packages}
   echo_title "\n[Docker] stop container"
   $docker_stop
 }
@@ -118,7 +118,7 @@ download_package_debian() {
   $docker_exec rm -rf /var/cache/apt/archives/* 
 
   echo_title "\n[Docker] download package"
-  $docker_exec apt-get install --download-only -y ${package_name}
+  $docker_exec apt-get install --download-only -y ${packages}
   $docker_exec find /var/cache/apt/archives/ -name "*.deb" -exec cp {} ${package_tmp_path} \;
   echo_title "\n[Docker] stop container"
   $docker_stop
@@ -167,6 +167,7 @@ Download Packages With Dependencies Locally.
 
   Example:
     $(basename $0) centos7 ansible
+    $(basename $0) centos7 "python36 python36-devel"
     $(basename $0) centos7 ceph /root/ceph.repo
 EOM
  exit 1
@@ -186,7 +187,8 @@ fi
 
 
 system="${1}"
-package_name="${2}"
+packages="${2}"
+package_name="${packages%% *}"
 package_repo="${3:-}"
 
 package_path="$(pwd)/package_${system}_${package_name:-local}"
