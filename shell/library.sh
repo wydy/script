@@ -783,3 +783,15 @@ func_secret_input(){
 	echo ""
 }
 
+
+# Check if a program is installed
+command_exists() {
+    # check if command exists and fail otherwise
+    command -v "$1" >/dev/null 2>&1
+    if [[ $? -ne 0 ]]; then
+        echo "I require $1 but it's not installed. Abort."
+        exit 1
+    fi
+}
+
+
