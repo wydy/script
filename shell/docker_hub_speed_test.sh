@@ -118,7 +118,7 @@ for mirror in ${!mirrors[*]}; do
     image_manifests=$(curl -s "${mirror}/v2/library/${image_name}/manifests/${image_tag}" | awk -F'"' '/"blobSum":/ {print $4}')
     image_layer=$( echo $resp | tr ' ' '\n' | sort -u | head -1)    
   fi
-  #spinner "${mirrors[$mirror]}/v2/${image_name}/blobs/${image_layer}" ${mirror}
+  spinner "${mirrors[$mirror]}/v2/${image_name}/blobs/${image_layer}" ${mirror}
 done
 
 spinner "https://registry-1.docker.io/v2/${image_name}/blobs/${image_layer}" "docker" "Authorization: Bearer $docker_token"
