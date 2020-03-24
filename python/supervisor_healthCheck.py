@@ -576,12 +576,12 @@ class HealthCheck(object):
         :param program:
         :param pid:
         :return:
-        """
+        """ 
         self.log(program, 'Action: kill')
         result = 'success'
 		
         if int(pid) < 3:
-            return 'Failed to kill %s, pid: %s '% (program, exitcode)
+            return 'Failed to kill %s, pid: %s '% (program, pid)
 		  
         cmd = "kill -9 %s" % pid
         exitcode, stdout, stderr = shell(cmd)
@@ -771,9 +771,15 @@ class HealthCheck(object):
             t = threading.Thread(target=self.check, args=(item,))
             threads.append(t)
         for t in threads:
-            t.setDaemon(True)
-            t.start()
-
+            try:
+                t.setDaemon(True)
+                t.start()
+            except Exception, e:
+                print('Exception in ' + t.getName() + ' (catch by main)')
+                print(t.exc_traceback)
+                t.setDaemon(True)
+                t.start()
+                
         while 1:
             time.sleep(0.1)
 
