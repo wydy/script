@@ -55,8 +55,8 @@ function spinner() {
 
   local pid=$(ps -ef | grep -E '[w]get.*-4O /dev/null -T300' | awk '{print $2}') # Process Id of the previous running command
 
-  local spin='◐◓◑◒'
-  local charwidth=3
+  local spin='-\|/'
+  local charwidth=1
 
   local i=0 
   tput civis # cursor invisible
