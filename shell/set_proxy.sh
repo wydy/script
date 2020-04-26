@@ -77,7 +77,7 @@ sudo apt-get update
 
 debiani_archive() {
 local _proxy=$(_get_proxy ${1:-} $DEBAIN_ARCHIVE_PROXY)
-cp /etc/apt/sources.list{,-bak}
+[ -f "/etc/apt/sources.list" ] && cp -f /etc/apt/sources.list{,-bak}
 cat << EOF > /etc/apt/sources.list
 deb ${_proxy}/debian/ wheezy main non-free contrib
 deb ${_proxy}/debian/ wheezy-backports main non-free contrib
@@ -114,8 +114,8 @@ EOF
 pip() {
 local _proxy=$(_get_proxy ${1:-} $PIP_PROXY)
 
-local d="~/.pip"
-[ ! -d "${d}" ] && mkdir ${d}
+local d=~/.pip
+[ ! -d "${d}" ] && mkdir "${d}"
 
 cat << EOF >  ${d}/pip.conf
 [global]
@@ -213,9 +213,9 @@ esac
 
 docker-hub() {
 local _proxy=$(_get_proxy ${1:-} $DOCKER_HUB_PROXY)
-local d="/etc/docker"
+local d=/etc/docker
 [ ! -d "${d}" ] && mkdir ${d}
-cp  ${d}/daemon.json{,-bak}
+[ -f "${d}/daemon.json" ] && cp -f ${d}/daemon.json{,-bak}
 cat > ${d}/daemon.json <<EOF
 {
     "log-driver": "json-file",
@@ -243,7 +243,7 @@ docker-http() {
 local _http_proxy=$(_get_proxy ${1:-''} ${DOCKER_HTTP_PROXY:-''} "http ")
 local _https_proxy=$(_get_proxy ${1:-''} ${DOCKER_HTTPS_PROXY:-''} "https ")
 
-local d="/etc/systemd/system/docker.service.d"
+local d=/etc/systemd/system/docker.service.d
 [ ! -d "${d}" ] && mkdir ${d}
 
 cat << EOF > ${d}/http-proxy.conf
@@ -265,7 +265,7 @@ sed -i "s#https://registry-1.docker.io#${_proxy}#g" /etc/containerd/config.toml
 containerd-http() {
 local _http_proxy=$(_get_proxy ${1:-''} ${CONTAINERD_HTTP_PROXY:-''} "http ")
 local _https_proxy=$(_get_proxy ${1:-''} ${CONTAINERD_HTTPS_PROXY:-''} "https ")
-local d="/etc/systemd/system/containerd.service.d"
+local d=/etc/systemd/system/containerd.service.d
 [ ! -d "${d}" ] && mkdir ${d}
 
 cat << EOF > ${d}/http-proxy.conf
@@ -280,9 +280,9 @@ systemctl restart containerd
 
 podman() {
 local _proxy=$(_get_proxy ${1:-} $DOCKER_HUB_PROXY)
-local d="/etc/containers"
+local d=/etc/containers
 [ ! -d "${d}" ] && mkdir ${d}
-cp ${d}/registries.conf{,.bak}
+[ -f "${d}/registries.conf" ] && cp -f ${d}/registries.conf{,.bak}
 cat << EOF > ${d}/registries.conf 
 unqualified-search-registries = ["docker.io","quay.io"]
 
