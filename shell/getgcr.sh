@@ -18,10 +18,11 @@ ORANGE_PS3=$'\e[0;33m'
 WHITE='\033[0;37m'
 
 proxy=(
-  "gcr.azk8s.cn/google_containers"
+  "gcr.lework.workers.dev"
   "registry.aliyuncs.com/google_containers"
   "gcrxio"
 )
+
 images=(
   "k8s.gcr.io/kube-apiserver:"
   "k8s.gcr.io/kube-controller-manager:"
