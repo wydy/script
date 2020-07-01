@@ -810,8 +810,8 @@ class HealthCheck(object):
             for i,t in enumerate(threads):
                 if not t.isAlive():
                     thread_name = t.getName()
-                    self.log('[ERROR] Exception in %s (catch by main): %s' % (thread_name, t.get_exception()))
-                    self.log('[ERROR] Create new Thread!')
+                    self.log('ERROR', 'Exception in %s (catch by main): %s' % (thread_name, t.get_exception()))
+                    self.log('ERROR', 'Create new Thread!')
                     t = WorkerThread(target=self.check, args=(threads_data[thread_name],), name=thread_name)
                     t.setDaemon(True)
                     t.start()
