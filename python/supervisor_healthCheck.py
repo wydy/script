@@ -161,6 +161,7 @@ class HealthCheck(object):
 
         self.mail_config = None
         self.wechat_config = None
+        self.dingding_config = None
         self.supervisord_url = 'unix:///var/run/supervisor.sock'
 
         if 'config' in config:
@@ -774,7 +775,7 @@ class HealthCheck(object):
 
         host = "oapi.dingtalk.com"
         access_token = self.dingding_config.get('access_token')
-        send_url = '/robot/send?access_token=={access_token}'.format(token=access_token)
+        send_url = '/robot/send?access_token={access_token}'.format(access_token=access_token)
 
         headers = {
             'Content-Type': 'application/json'
@@ -785,7 +786,7 @@ class HealthCheck(object):
         else:
             title = "[%s] Health check failed" % program
 
-        send_data = {"msgtype": "markdown",
+        data = {"msgtype": "markdown",
                      "markdown": {
                          "title": title,
                          "text": "#### 详情信息: \n> Program：%s \n\n> DataTime: %s \n\n> Hostname: %s \n\n> Platfrom: %s \n\n> Msg：%s" % (
