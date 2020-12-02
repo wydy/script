@@ -65,7 +65,16 @@ function get::selector {
   fi
 
   if [[ "${SELECTOR}" == "" ]]; then
-    echo -e "\033[0;31m[Error] not found $APPNAME selector\033[0m"
+   resource="service job cronjob replicaset daemonset statefulset"
+   for r in $resource
+   do
+     SELECTOR=$(kubectl -n kube-system get ${r} ${APPNAME} --ignore-not-found --show-labels --no-headers 2>/dev/null | awk '{print $NF}' | grep -v '<none>' |head -1)
+     if [[ "${SELECTOR}" != "" ]]; then break;fi
+   done
+  fi
+
+  if [[ "${SELECTOR}" == "" ]]; then
+    echo -e "\n\033[0;31m[Error] not found $APPNAME selector.\033[0m"
     exit 1
   fi
   file::write "
@@ -134,6 +143,8 @@ function get::info {
   get::describe pod
   get::describe configmaps
   get::describe secrets
+  get::describe pvc
+  get::describe pv
   get::pods_log
   get::k8s_event
   get::cluster
