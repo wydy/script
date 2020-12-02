@@ -794,4 +794,13 @@ command_exists() {
     fi
 }
 
-
+function utils::quote() {
+  # 引号
+  if [ $(echo "$@" | tr -d "\n" | wc -c) -eq 0 ]; then 
+    echo "''"
+  elif [ $(echo "$@" | tr -d "[a-z][A-Z][0-9]:,.=~_/\n-" | wc -c) -gt 0 ]; then 
+    echo "$@" | sed -e "s/'/\'\"\'\"\'/g" | sed -e "s/^/'/g" -e "s/$/'/g"
+  else 
+    echo "$@"
+  fi
+}
