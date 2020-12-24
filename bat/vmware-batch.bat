@@ -1,6 +1,7 @@
 @echo off
 Setlocal enabledelayedexpansion
 ::CODER BY lework
+:: 虚拟机需安装vmtool
 
 title VMware Workstation 虚拟机批量管理
 
@@ -14,13 +15,13 @@ IF EXIST "%PROGRAMFILES(X86)%\VMware\VMware VIX\vmrun.exe" SET VMRUN=%PROGRAMFIL
 :: 虚拟机存放目录
 set VMpath="D:\Virtual Machines"
 :: 虚拟机名称
-set VMname=CentOS_7.8_x64_node
+set VMname=Debian_10.2_x64_node
 :: 虚拟机快照名称
 set VMSnapshot=init
 :: 新建虚拟机数目
 set VMcount=5
 :: 虚拟机owa模板位置
-set VMowa="D:\vmware owa\CentOS_7.8_x64_base.ova"
+set VMowa="D:\vmware owa\Debian_10.2_x64_base.ova"
 :: 模板系统用户名
 set VMuser=root
 :: 模板系统密码
@@ -28,7 +29,7 @@ set VMpass=123456
 :: 虚拟机网络
 set VMnetwork=192.168.77
 :: 虚拟机ip开始地址
-set VMipStart=130
+set VMipStart=180
 
 
 
@@ -52,6 +53,7 @@ echo. 输入 9 删除虚拟机
 echo. 输入 10 挂起虚拟机
 echo. 输入 11 暂停虚拟机
 echo. 输入 12 恢复虚拟机
+echo. 输入 13 删除快照
 echo. 输入 q 退出
 echo.
 echo ==============================
@@ -76,6 +78,7 @@ if "%input%"=="9" goto delete
 if "%input%"=="10" goto suspend
 if "%input%"=="11" goto pausevm
 if "%input%"=="12" goto unpausevm
+if "%input%"=="13" goto delsnapshot
 
 :wait
 echo. 
@@ -132,7 +135,7 @@ set name=!VMname!%%a
 set /a num=%VMipStart%+%%a-1
 set ip=!VMnetwork!.!num!
 echo !name!:!ip!
-vmrun -T ws -gu !VMuser! -gp !VMpass! runProgramInGuest !VMpath!\!name!\!name!.vmx /bin/bash -c "sudo echo 'node!num!' > /etc/hostname; sudo sed -i 's/IPADDR=.*$/IPADDR="!ip!"/g' /etc/sysconfig/network-scripts/ifcfg-e*;/etc/init.d/network restart || sudo sed -i 's/address .*$/address !ip!/g' /etc/network/interfaces;/etc/init.d/network restart" nogui
+vmrun -T ws -gu !VMuser! -gp !VMpass! runProgramInGuest !VMpath!\!name!\!name!.vmx -noWait /bin/bash -c "echo 'node!num!' > /etc/hostname &&  echo '127.0.0.1 node!num!' >> /etc/hosts; sudo sed -i 's/IPADDR=.*$/IPADDR="!ip!"/g' /etc/sysconfig/network-scripts/ifcfg-e* || sudo sed -i 's/address .*$/address !ip!/g' /etc/network/interfaces; init 6" nogui
 )
 
 echo.
@@ -308,6 +311,19 @@ vmrun -T ws start !VMpath!\!VMname!%%a\!VMname!%%a.vmx nogui
 )
 goto wait
 
+:delsnapshot
+echo [删除快照...]
+set /p VMname=请输入虚拟机名称(默认:%VMname%):
+set /p VMcount=请输入虚拟机数量(默认:%VMcount%):
+set /p VMSnapshot=请输入快照名称(默认:%VMSnapshot%):
+for /l %%a in (1,1,%VMcount%) do (
+set name=!VMname!%%a
+echo !name!
+vmrun -T ws deleteSnapshot !VMpath!\!name!\!name!.vmx !VMSnapshot!
+)
+goto wait
+
+
 
 :setip
 echo [设置ip地址...]
@@ -322,7 +338,7 @@ set name=!VMname!%%a
 set /a num=%VMipStart%+%%a-1
 set ip=!VMnetwork!.!num!
 echo !name!:!ip!
-vmrun -T ws -gu !VMuser! -gp !VMpass! runProgramInGuest !VMpath!\!name!\!name!.vmx /bin/bash -c "sudo sed -i 's/IPADDR=.*$/IPADDR="!ip!"/g' /etc/sysconfig/network-scripts/ifcfg-e*;/etc/init.d/network restart || sudo sed -i 's/address .*$/address !ip!/g' /etc/network/interfaces;/etc/init.d/network restart" nogui
+vmrun -T ws -gu !VMuser! -gp !VMpass! runProgramInGuest !VMpath!\!name!\!name!.vmx -noWait /bin/bash -c "echo 'node!num!' > /etc/hostname &&  echo '127.0.0.1 node!num!' >> /etc/hosts; sudo sed -i 's/IPADDR=.*$/IPADDR="!ip!"/g' /etc/sysconfig/network-scripts/ifcfg-e* || sudo sed -i 's/address .*$/address !ip!/g' /etc/network/interfaces; init 6" nogui
 )
 goto wait
 

@@ -32,6 +32,164 @@ COLOR_GRAY="${COLOR_GRAY:-\e[1;90m}"
 COLOR_OFF="${COLOR_OFF:-\e[0m}"
 NOCOLOR="${NOCOLOR:-false}"
 
+time_data=""
+mem_total_data=""
+mem_free_data=""
+mem_available_data=""
+mem_rss_data=""
+mem_pss_data=""
+mem_uss_data=""
+cpu_used_data=""
+
+trap trap::info 1 2 3 15 EXIT
+
+######################################################################################################
+# function
+######################################################################################################
+
+function trap::info() {
+  cat << EOF > pid_${PID}_line.json
+option = {
+    title: {
+        text: '内存监控',
+        subtext: 'PID: ${PID}'
+    },
+    tooltip: {
+        trigger: 'axis'
+    },
+    legend: {
+        data: ['mem_total', 'mem_free', 'mem_available', 'pid_mem_rss', 'pid_mem_pss', 'pid_mem_uss', 'pid_cpu_used']
+    },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
+    toolbox: {
+        feature: {
+            saveAsImage: {}
+        }
+    },
+    xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: [${time_data/,}]
+    },
+    yAxis: [
+      	{
+	    	type: "value",
+	    	name: "内存 / MB",
+	    	nameLocation: 'center',
+	    	nameGap: 45
+		},
+		{
+	    	type: "value",
+	    	name: "CPU使用率 / %",
+	    	nameLocation: 'center',
+	    	nameGap: 45
+		}
+    ], 
+    series: [
+        {
+            name: 'mem_total',
+            type: 'line',
+            smooth: true,
+            data: [${mem_total_data/,}],
+            markPoint: {
+                data: [{
+                    name: '最大值',
+                    type: 'max'
+                }] 
+            }
+        },
+        {
+            name: 'mem_free',
+            type: 'line',
+            smooth: true,
+            data: [${mem_free_data/,}],
+            markPoint: {
+                data: [{
+                    name: '最小值',
+                    type: 'min'
+                }] 
+            }
+        },
+        {
+            name: 'mem_available',
+            type: 'line',
+            smooth: true,
+            data: [${mem_available_data/,}],
+            markPoint: {
+                data: [{
+                    name: '最小值',
+                    type: 'min'
+                }] 
+            }
+        },
+        {
+            name: 'pid_mem_rss',
+            type: 'line',
+            smooth: true,
+            data: [${mem_rss_data/,}],
+            markPoint: {
+                data: [{
+                    name: '最大值',
+                    type: 'max'
+                }] 
+            }
+        },
+        {
+            name: 'pid_mem_pss',
+            type: 'line',
+            smooth: true,
+            data: [${mem_pss_data/,}],
+            markPoint: {
+                data: [{
+                    name: '最大值',
+                    type: 'max'
+                }] 
+            }
+        },
+        {
+            name: 'pid_mem_uss',
+            type: 'line',
+            smooth: true,
+            data: [${mem_uss_data/,}],
+            markPoint: {
+                data: [{
+                    name: '最大值',
+                    type: 'max'
+                }] 
+            }
+        },
+        {
+            name: 'pid_cpu_used',
+            type: 'line',
+            smooth: true,
+            yAxisIndex: 1,
+            data: [${cpu_used_data/,}],
+            markPoint: {
+                data: [{
+                    name: '最大值',
+                    type: 'max'
+                }] 
+            }
+        }
+    ]
+};
+EOF
+  echo -e "
+\n${COLOR_GREEN}
+  Config File: pid_${PID}_line.json
+  GO TO URL: https://echarts.apache.org/next/examples/en/editor.html   
+${COLOR_OFF}
+  "
+  trap '' EXIT
+  exit
+            
+}
+
 ######################################################################################################
 # function
 ######################################################################################################
@@ -43,6 +201,7 @@ function get::meminfo() {
   pid_smaps=$(cat /proc/${PID}/smaps)
   [ "$pid_smaps" == "" ] && { echo -e "${COLOR_RED}[Error]${COLOR_OFF} /proc/${PID}/smaps is empty!"; exit 1; }
   
+  cpu_used=$(ps -opcpu= -p "${PID}")
   mem_info=$(cat /proc/meminfo)
 
   mem_total=$(printf "%s" "${mem_info}"| awk '/^MemTotal:/  {print $2}')
@@ -77,7 +236,22 @@ function get::meminfo_loop() {
   get::pidinfo
   while [ $count -lt $RETRIES ] ; do
     get::meminfo
-    echo -e "Date: $(date +'%Y-%m-%d %T') ${COLOR_PURPLE}MemTotal: $((mem_total/1024))MB${COLOR_OFF} ${COLOR_GREEN}MemFree: $((mem_free/1024))MB${COLOR_OFF} ${COLOR_BLUE}MemAvailable: $((mem_available/1024))MB${COLOR_OFF} ${COLOR_YELLOW}RSS: $((${rss}/1024))MB${COLOR_OFF} ${COLOR_CYAN}PSS: $((${pss}/1024))MB${COLOR_OFF} ${COLOR_RED}USS: $(( (${private_clean} + ${private_dirty}) /1024 ))MB${COLOR_OFF}"
+    d=$(date +'%Y-%m-%d %T')
+    mem_total=$((mem_total/1024))
+    mem_free=$((mem_free/1024))
+    mem_available=$((mem_available/1024))
+    mem_rss=$((${rss}/1024))
+    mem_pss=$((${pss}/1024))
+    mem_uss=$(( (${private_clean} + ${private_dirty}) /1024 ))
+    echo -e "Date: ${d} ${COLOR_PURPLE}MemTotal: ${mem_total}MB${COLOR_OFF} ${COLOR_GREEN}MemFree: ${mem_free}MB${COLOR_OFF} ${COLOR_BLUE}MemAvailable: ${mem_available}MB${COLOR_OFF} ${COLOR_YELLOW}RSS: ${mem_rss}MB${COLOR_OFF} ${COLOR_CYAN}PSS: ${mem_pss}MB${COLOR_OFF} ${COLOR_RED}USS: ${mem_uss}MB${COLOR_OFF} CPU: ${cpu_used}%"
+    time_data="${time_data},'${d}'"
+    mem_total_data="${mem_total_data},'${mem_total}'"
+    mem_free_data="${mem_free_data},'${mem_free}'"
+    mem_available_data="${mem_available_data},'${mem_available}'"
+    mem_rss_data="${mem_rss_data},'${mem_rss}'"
+    mem_uss_data="${mem_uss_data},'${mem_uss}'"
+    mem_pss_data="${mem_pss_data},'${mem_pss}'"
+    cpu_used_data="${cpu_used_data},'${cpu_used}'"
     sleep $WAIT
     count=$(($count + 1))
   done

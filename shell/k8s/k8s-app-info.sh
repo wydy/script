@@ -61,7 +61,7 @@ function get::selector {
   echo -ne "Get Selector"
   if [[ "${SELECTOR}" == "" ]]; then
     selflink=$(kubectl -n $NAMESPACE get deployment $APPNAME -o yaml --ignore-not-found 2>/dev/null | awk '/selfLink:/ {print $2}')
-    SELECTOR=$(kubectl get --raw "${selflink}/scale" 2>/dev/null | sed 's/.*selector":"\(.*\)".*/\1/g')
+    SELECTOR=$(kubectl get --raw "${selflink}/scale" 2>/dev/null | sed 's/.*[S|s]elector":"\(.*\)".*/\1/g')
   fi
 
   if [[ "${SELECTOR}" == "" ]]; then
