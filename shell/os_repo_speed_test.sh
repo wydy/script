@@ -105,7 +105,7 @@ os=`cat /etc/*-release | grep '^ID=' | \
   sed 's/^ID=["]*\([a-zA-Z]*\).*$/\1/' | \
   tr '[:upper:]' '[:lower:]'`
 
-os=${os:-centos}
+os=${os:-debian}
 case "$os" in
   centos)
     file="centos/filelist.gz"
