@@ -114,7 +114,7 @@ case "$os" in
     file="/debian/ls-lR.gz"
     ;;
   *)
-    file="centos/filelist.gz"
+    file="/debian/ls-lR.gz"
     ;;
 esac
 
